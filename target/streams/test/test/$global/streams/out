@@ -1,0 +1,20 @@
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.MutatorSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.EvolverSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.ArchiveUpdaterSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.CrossoverSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.FitnessDataSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.AlleleSetSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(ga.MigrateSpec, org.scalatest.tools.Framework$$anon$1@aecacdf, false, [SuiteSelector])[0m
+[0m[[0minfo[0m] [0m[36mRun completed in 1 second, 1 millisecond.[0m[0m
+[0m[[0minfo[0m] [0m[36mTotal number of tests run: 13[0m[0m
+[0m[[0minfo[0m] [0m[36mSuites: completed 7, aborted 0[0m[0m
+[0m[[0minfo[0m] [0m[36mTests: succeeded 13, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0minfo[0m] [0m[32mAll tests passed.[0m[0m
+[0m[[0mdebug[0m] [0mPassed tests:[0m
+[0m[[0mdebug[0m] [0m	ga.FitnessDataSpec[0m
+[0m[[0mdebug[0m] [0m	ga.MigrateSpec[0m
+[0m[[0mdebug[0m] [0m	ga.MutatorSpec[0m
+[0m[[0mdebug[0m] [0m	ga.AlleleSetSpec[0m
+[0m[[0mdebug[0m] [0m	ga.CrossoverSpec[0m
+[0m[[0mdebug[0m] [0m	ga.ArchiveUpdaterSpec[0m
+[0m[[0mdebug[0m] [0m	ga.EvolverSpec[0m
