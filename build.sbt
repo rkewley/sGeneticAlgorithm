@@ -1,8 +1,10 @@
-name := """akka-scala-seed"""
+organization := "DSE"
+
+name := """sGeneticAlgorithm"""
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.0",
