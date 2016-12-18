@@ -1,7 +1,0 @@
-[0m[[0minfo[0m] [0m[32mAlleleSetSpec:[0m[0m
-[0m[[0minfo[0m] [0m[32mAn integer allele set[0m[0m
-[0m[[0minfo[0m] [0m[32m- should generate random numbers from min to max[0m[0m
-[0m[[0minfo[0m] [0m[32mAn real allele set[0m[0m
-[0m[[0minfo[0m] [0m[32m- should generate random numbers from min to max[0m[0m
-[0m[[0minfo[0m] [0m[32mAn Initializer[0m[0m
-[0m[[0minfo[0m] [0m[32m- should initilize a genome with random values[0m[0m

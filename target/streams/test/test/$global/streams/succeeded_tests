@@ -1,9 +1,0 @@
-#Successful Tests
-#Sun Dec 18 01:50:10 UTC 2016
-ga.AlleleSetSpec=1482025810524
-ga.FitnessDataSpec=1482025810361
-ga.MigrateSpec=1482025810363
-ga.ArchiveUpdaterSpec=1482025810364
-ga.MutatorSpec=1482025810309
-ga.EvolverSpec=1482025810412
-ga.CrossoverSpec=1482025810393
