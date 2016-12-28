@@ -5,17 +5,17 @@ import sGeneticAlgorithm.ga.GA._
 import sGeneticAlgorithm.ga._
 import sGeneticAlgorithm.utils.SimRandom
 
-class EvolverSpec extends FlatSpec {
+class GAEvolverSpec extends FlatSpec {
   val random = new SimRandom(0)
   //Create a population with uniform genomes
-  val pop: Population[Long, Vector[Long]] = (for (i <- 1 to 100) yield {
+  val pop: Population[Any, Vector[Any]] = (for (i <- 1 to 100) yield {
     (for (j <- 1 to 100) yield i.toLong).toVector
   }).toVector
 
   // Evaluate the population so that fitness is the average of the values
-  class FirstEvaluator extends SimpleEvaluator[Long, Vector[Long], Double] {
-    override def evaluateGenome(g: Genome[Long, Vector[Long]]): EvaluatedGenome[Long, Vector[Long], Double] = {
-      new EvaluatedGenome[Long, Vector[Long], Double](g, g.sum/g.size)
+  class FirstEvaluator extends SimpleEvaluator[Any, Vector[Any], Double] {
+    override def evaluateGenome(g: Genome[Any, Vector[Any]]): EvaluatedGenome[Any, Vector[Any], Double] = {
+      new EvaluatedGenome[Any, Vector[Any], Double](g, g.map(_.asInstanceOf[Long]).sum/g.size)
     }
   }
 
@@ -24,24 +24,25 @@ class EvolverSpec extends FlatSpec {
   val evaluator = new FirstEvaluator
   val evaluatedSpecies = evaluator.evaluate(animals)
   val evaluatedPopulation = evaluatedSpecies(0)(0)
+  val numCrossoverPoints = 2
+  val numChildren = 1
+  val mutationRate = 0.0
+  val numInTournament = 2
+  val replacementRate = 0.5
 
-  "An Evolver" should "evolve the population with crossover only" in {
+  val crossover = new MultiPointCrossover[Any](random, numCrossoverPoints, numChildren)
+  val ias = LongAlleleSet(random, 101, 200)
+  val alleles = (for (i <- 1 to 100) yield ias).toVector
+  val mutator = AlleleSetMutator[Any](random, alleles, mutationRate)
+  val tournamentSelector = new TournamentSelector[Any, Vector[Any], Double](random, numInTournament)
+  val bestSelector = new BestSelector[Any, Vector[Any], Double]
+  val archiveUpdater = new BestNArchiveUpdater[Any, Vector[Any], Double](20)
+  val evolver = new CrossoverEvolver(mutator, crossover, tournamentSelector, bestSelector, archiveUpdater, replacementRate)
+  //val ga = new GA()
 
-    // First try with no mutation
-    val numCrossoverPoints = 2
-    val numChildren = 1
-    val mutationRate = 0.0
-    val numInTournament = 2
-    val replacementRate = 0.5
+  "A GA" should "evolve the population one generation" in {
 
-    val crossover = new MultiPointCrossover[Long](random, numCrossoverPoints, numChildren)
-    val ias = LongAlleleSet(random, 101, 200)
-    val alleles = (for (i <- 1 to 100) yield ias).toVector
-    val mutator = AlleleSetMutator[Long](random, alleles, mutationRate)
-    val tournamentSelector = new TournamentSelector[Long, Vector[Long], Double](random, numInTournament)
-    val bestSelector = new BestSelector[Long, Vector[Long], Double]
-    val archiveUpdater = new BestNArchiveUpdater[Long, Vector[Long], Double](20)
-    val evolver = new CrossoverEvolver(mutator, crossover, tournamentSelector, bestSelector, archiveUpdater, replacementRate)
+
     val nextGeneration = evolver.evolve(evaluatedPopulation, None).pop
 
     // The new population should be the same size as the old
@@ -62,7 +63,7 @@ class EvolverSpec extends FlatSpec {
     assert(average > 60)
   }
 
-  "An Evolver" should "evolve the population with mutation only" in {
+  "An GA" should "update the archive with the most fit genomes" in {
 
     // First try with no mutation
 
@@ -70,13 +71,13 @@ class EvolverSpec extends FlatSpec {
     val replacementRate = 0.5
     val numInTournament = 2
 
-    val crossover = new NoCrossover[Long, Vector[Long]]
+    val crossover = new NoCrossover[Any, Vector[Any]]
     val ias = LongAlleleSet(random, 101, 200)
     val alleles = (for (i <- 1 to 100) yield ias).toVector
-    val mutator = AlleleSetMutator[Long](random, alleles, mutationRate)
-    val tournamentSelector = new TournamentSelector[Long, Vector[Long], Double](random, numInTournament)
-    val bestSelector = new BestSelector[Long, Vector[Long], Double]
-    val archiveUpdater = new BestNArchiveUpdater[Long, Vector[Long], Double](20)
+    val mutator = AlleleSetMutator[Any](random, alleles, mutationRate)
+    val tournamentSelector = new TournamentSelector[Any, Vector[Any], Double](random, numInTournament)
+    val bestSelector = new BestSelector[Any, Vector[Any], Double]
+    val archiveUpdater = new BestNArchiveUpdater[Any, Vector[Any], Double](20)
     val evolver = new CrossoverEvolver(mutator, crossover, tournamentSelector, bestSelector, archiveUpdater, replacementRate)
     val nextGeneration = evolver.evolve(evaluatedPopulation, None).pop
 

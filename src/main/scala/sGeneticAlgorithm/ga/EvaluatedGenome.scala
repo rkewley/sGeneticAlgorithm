@@ -6,5 +6,5 @@ package sGeneticAlgorithm.ga
 
 import  GA._
 
-class AlleleValueFitness[T, F](genome: Genome[T, Vector[T]], fitness: F) extends EvaluatedGenome[T, Vector[T], F](genome, fitness)
+class AlleleValueFitness[T, F: Ordering](genome: Genome[T, Vector[T]], fitness: F) extends EvaluatedGenome[T, Vector[T], F](genome, fitness)
 

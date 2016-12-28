@@ -2,18 +2,17 @@ package sGeneticAlgorithm.ga
 
 
 object GA {
-
-
+  case class Unique[T]( val any: Any, val uuid: String = java.util.UUID.randomUUID.toString) extends Serializable
   type Genome[T, I <: Iterable[T]] = I
   type Population[T, I <: Iterable[T]] = Vector[Genome[T, I]]
   type Species[T, I <: Iterable[T]] = Vector[Population[T, I]]
   type EvaluatedSpecies[T, I <: Iterable[T], F] = Vector[EvaluatedPopulation[T, I, F]]
   type EvaluatedPopulation[T, I <: Iterable[T], F] = Vector[EvaluatedGenome[T, I, F]]
 
-  class EvaluatedGenome[T, I <: Iterable[T], F](val genome: Genome[T, I], val fitness: F)
-  case class PopArchive[T,I <: Iterable[T],F: Ordering](pop: Population[T, I], archive: Option[EvaluatedPopulation[T,I,F]])
-  case class EvaluatedPopArchive[T,I <: Iterable[T],F: Ordering](evaluatedPop: EvaluatedPopulation[T, I, F], archive: Option[EvaluatedPopulation[T,I,F]])
-  case class SpeciesArchive[T,I <: Iterable[T],F: Ordering](popArchives: Vector[PopArchive[T, I, F]]) {
+  class EvaluatedGenome[T, I <: Iterable[T], F: Ordering](val genome: Genome[T, I], val fitness: F)
+  case class PopArchive[T, I <: Iterable[T], F: Ordering](pop: Population[T, I], archive: Option[EvaluatedPopulation[T,I,F]] = None)
+  case class EvaluatedPopArchive[T, I <: Iterable[T],F: Ordering](evaluatedPop: EvaluatedPopulation[T, I, F], archive: Option[EvaluatedPopulation[T,I,F]])
+  case class SpeciesArchive[T, I <: Iterable[T], F: Ordering](popArchives: Vector[PopArchive[T, I, F]]) {
     def populations: Species[T, I] = {
       popArchives.map(_.pop)
     }
@@ -25,7 +24,7 @@ object GA {
       }
     }
   }
-  case class EvaluatedSpeciesArchive[T,I <: Iterable[T],F: Ordering](evaluatedPopArchives: Vector[EvaluatedPopArchive[T, I, F]]) {
+  case class EvaluatedSpeciesArchive[T,I <: Iterable[T], F: Ordering](evaluatedPopArchives: Vector[EvaluatedPopArchive[T, I, F]]) {
     def this(evSpecies: EvaluatedSpecies[T, I, F], archives: Option[Vector[EvaluatedPopulation[T, I, F]]]) = {
       this((for (i <- 0 to evSpecies.size - 1) yield EvaluatedPopArchive(evSpecies(i), archives.map(_(i)))).toVector)
     }
@@ -98,15 +97,13 @@ import GA._
 
 class GAException(message: String) extends Exception(message)
 
-class GA[T, I <: Iterable[T], F: Ordering](val initializer: GenomeInitializer[T, I],
-                                           val evaluator: Evaluator[T, I, F],
+class GA[T, I <: Iterable[T], F: Ordering](val evaluator: Evaluator[T, I, F],
                                            val migrater: Migrater[T, I, F],
                                            val evolver: Evolver[T, I, F],
                                            firstGeneration: Vector[SpeciesArchive[T, I, F]],
                                            numGenerations: Int) {
 
 
-  def initialize = initializer.initialize
   def evaluate(speciesVector: Vector[Species[T, I]]): Vector[EvaluatedSpecies[T, I, F]] = evaluator.evaluate(speciesVector)
   def migrate(evaluatedSpecies: EvaluatedSpecies[T, I, F]) = migrater.migrate(evaluatedSpecies)
   def evolvePopulation(evaluated: EvaluatedPopulation[T, I, F], archiveOption: Option[EvaluatedPopulation[T, I, F]]): PopArchive[T, I, F] = {

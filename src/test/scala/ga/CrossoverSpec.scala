@@ -7,13 +7,13 @@ import sGeneticAlgorithm.utils.SimRandom
 
 class CrossoverSpec extends FlatSpec {
   val random = new SimRandom(0)
-  val mom: Genome[Any, Vector[Any]] = Vector(1, 1, 1, 1, 1, 1)
-  val dad: Genome[Any, Vector[Any]] = Vector(2, 2, 2, 2, 2, 2)
+  val mom: Genome[Long, Vector[Long]] = Vector(1, 1, 1, 1, 1, 1)
+  val dad: Genome[Long, Vector[Long]] = Vector(2, 2, 2, 2, 2, 2)
   "An multi-point crossover" should "generate children with crossed values" in {
     val numChildren = 6
     val numCrossoverPoints = 2
 
-    val crosser: MultiPointCrossover[Any] = new MultiPointCrossover(random, numCrossoverPoints, numChildren)
+    val crosser: MultiPointCrossover[Long] = new MultiPointCrossover(random, numCrossoverPoints, numChildren)
 
     val children = crosser.crossover(mom, dad)
     println("Genomes with 1's in the middle are: ")
@@ -24,7 +24,7 @@ class CrossoverSpec extends FlatSpec {
   }
 
   "A NoCrossover" should "return mom and dad genomes" in {
-    val crosser = new NoCrossover[Any, Vector[Any]]
+    val crosser = new NoCrossover[Long, Vector[Long]]
     val children = crosser.crossover(mom, dad)
     assert(children.size == 2)
     assert(children(0) == Vector(1, 1, 1, 1, 1, 1))

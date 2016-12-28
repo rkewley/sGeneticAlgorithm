@@ -48,4 +48,5 @@ class AlleleSetSpec extends FlatSpec {
     assert(flatInts.min == 0)
     assert(flatInts.max == 2)
   }
+  
 }
