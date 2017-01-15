@@ -6,6 +6,9 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
+
+scalacOptions ++= Seq("-Xlog-implicits")
+
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.0",
   // Change this to another test framework if you prefer

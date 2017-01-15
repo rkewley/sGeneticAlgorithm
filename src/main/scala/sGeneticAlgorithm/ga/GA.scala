@@ -1,23 +1,27 @@
 package sGeneticAlgorithm.ga
+import akka.actor._
 
 
 object GA {
   case class Unique[T]( val any: Any, val uuid: String = java.util.UUID.randomUUID.toString) extends Serializable
+  case object Start
   type Genome[T, I <: Iterable[T]] = I
   type Population[T, I <: Iterable[T]] = Vector[Genome[T, I]]
   type Species[T, I <: Iterable[T]] = Vector[Population[T, I]]
   type EvaluatedSpecies[T, I <: Iterable[T], F] = Vector[EvaluatedPopulation[T, I, F]]
   type EvaluatedPopulation[T, I <: Iterable[T], F] = Vector[EvaluatedGenome[T, I, F]]
+  type Ecosystem = Vector[Species[_, _ <: Iterable[_]]]
+  type EvaluatedEcosystem = Vector[EvaluatedSpecies[_, _ <: Iterable[_], _]]
 
   class EvaluatedGenome[T, I <: Iterable[T], F: Ordering](val genome: Genome[T, I], val fitness: F)
-  case class PopArchive[T, I <: Iterable[T], F: Ordering](pop: Population[T, I], archive: Option[EvaluatedPopulation[T,I,F]] = None)
-  case class EvaluatedPopArchive[T, I <: Iterable[T],F: Ordering](evaluatedPop: EvaluatedPopulation[T, I, F], archive: Option[EvaluatedPopulation[T,I,F]])
+  case class PopArchive[T, I <: Iterable[T], F: Ordering](pop: Population[T, I], archiveOption: Option[EvaluatedPopulation[T,I,F]] = None)
+  case class EvaluatedPopArchive[T, I <: Iterable[T],F: Ordering](evaluatedPop: EvaluatedPopulation[T, I, F], archiveOption: Option[EvaluatedPopulation[T,I,F]])
   case class SpeciesArchive[T, I <: Iterable[T], F: Ordering](popArchives: Vector[PopArchive[T, I, F]]) {
     def populations: Species[T, I] = {
       popArchives.map(_.pop)
     }
     def archives: Option[Vector[EvaluatedPopulation[T, I, F]]] = {
-      val options: Vector[Option[EvaluatedPopulation[T, I, F]]] = popArchives.map(_.archive)
+      val options: Vector[Option[EvaluatedPopulation[T, I, F]]] = popArchives.map(_.archiveOption)
       options.isEmpty match {
         case true => None
         case false => Some(options.map(_.get))
@@ -32,13 +36,17 @@ object GA {
       evaluatedPopArchives.map(_.evaluatedPop)
     }
     def archives: Option[Vector[EvaluatedPopulation[T, I, F]]] = {
-      val options: Vector[Option[EvaluatedPopulation[T, I, F]]] = evaluatedPopArchives.map(_.archive)
+      val options: Vector[Option[EvaluatedPopulation[T, I, F]]] = evaluatedPopArchives.map(_.archiveOption)
       options.isEmpty match {
         case true => None
         case false => Some(options.map(_.get))
       }
     }
   }
+
+  case class EcosystemArchive(speciesArchives: Vector[SpeciesArchive[_, _ <: Iterable[_], _]])
+  case class EvaluatedEcosysteemArchive(evaluatedSpeciesArchives: Vector[EvaluatedSpeciesArchive[_, _ <: Iterable[_], _]])
+
 
   trait GenomeInitializer[T, I <: Iterable[T]] {
     def initialize: Population[T, I]
@@ -97,62 +105,45 @@ import GA._
 
 class GAException(message: String) extends Exception(message)
 
-class GA[T, I <: Iterable[T], F: Ordering](val evaluator: Evaluator[T, I, F],
+class GA[T, I <: Iterable[T], F: Ordering](val evaluatorActor: ActorRef,
+                                           val dataActor: ActorRef,
                                            val migrater: Migrater[T, I, F],
                                            val evolver: Evolver[T, I, F],
-                                           firstGeneration: Vector[SpeciesArchive[T, I, F]],
-                                           numGenerations: Int) {
+                                           firstGeneration: SpeciesArchive[T, I, F],
+                                           numGenerations: Int) extends Actor {
 
-
-  def evaluate(speciesVector: Vector[Species[T, I]]): Vector[EvaluatedSpecies[T, I, F]] = evaluator.evaluate(speciesVector)
+  var generation: Int = 0
   def migrate(evaluatedSpecies: EvaluatedSpecies[T, I, F]) = migrater.migrate(evaluatedSpecies)
   def evolvePopulation(evaluated: EvaluatedPopulation[T, I, F], archiveOption: Option[EvaluatedPopulation[T, I, F]]): PopArchive[T, I, F] = {
     evolver.evolve(evaluated, archiveOption)
   }
 
-  def evolve: Vector[Vector[EvaluatedSpeciesArchive[T, I, F]]] = {
-    def evolveOneGeneration(speciesArchives: Vector[SpeciesArchive[T,I,F]],
-                            history: Vector[Vector[EvaluatedSpeciesArchive[T,I,F]]],
-                            n: Int): Vector[Vector[EvaluatedSpeciesArchive[T, I, F]]] = {
-      n match {
-        case x if x == numGenerations =>
-          val evaluatedSpeciesVector = evaluate(speciesArchives.map(_.populations))
-          val evaluatedSpeciesArchives: Vector[EvaluatedSpeciesArchive[T,I,F]] = (for (i <- 0 to evaluatedSpeciesVector.size -1) yield {
-            val es = evaluatedSpeciesVector(i)
-            val ar = speciesArchives(i).archives
-            new EvaluatedSpeciesArchive(es, ar)
-          }).toVector
-          history ++ Vector(evaluatedSpeciesArchives)
-        case _ =>
-          val (nextGeneration, evaluatedSpeciesVector) = evolveGeneration(speciesArchives)
-          val evaluatedSpeciesArchives: Vector[EvaluatedSpeciesArchive[T,I,F]] = (for (i <- 0 to evaluatedSpeciesVector.size -1) yield {
-            val es = evaluatedSpeciesVector(i)
-            val ar = speciesArchives(i).archives
-            new EvaluatedSpeciesArchive(es, ar)
-          }).toVector
-          evolveOneGeneration(nextGeneration, history ++ Vector(evaluatedSpeciesArchives),n)
+
+  def receive = {
+    case esa: EvaluatedSpeciesArchive[T, I, F] =>
+      // log the species evaluation to the data actor
+      dataActor ! esa
+
+      // continue to evolve if we have not reached the prescribed number of generations
+      generation = generation + 1
+      if (generation < numGenerations) {
+        val nextGeneration: SpeciesArchive[T, I, F] = evolveGeneration(esa)
+        evaluatorActor ! nextGeneration
       }
-    }
-    evolveOneGeneration(firstGeneration, Vector[Vector[EvaluatedSpeciesArchive[T,I,F]]](), 0)
+
+    case Start =>
+      evaluatorActor ! firstGeneration
   }
 
-  def evolveGeneration(speciesArchives: Vector[SpeciesArchive[T,I,F]]):
-  (Vector[SpeciesArchive[T, I, F]], Vector[EvaluatedSpecies[T, I, F]]) = {
-    val evaluatedSpeciesVector = evaluate(speciesArchives.map(_.populations))
-    val nextGeneration: Vector[SpeciesArchive[T,I,F]] = (for (i <- 0 to speciesArchives.size -1) yield {
-      // for each species
-      val evaluatedSpecies: EvaluatedSpecies[T, I, F] = evaluatedSpeciesVector(i)
-      val migratedSpecies: EvaluatedSpecies[T, I, F] = migrate(evaluatedSpecies)
-      val archiveVectorOption = speciesArchives(i).archives
+  def evolveGeneration(evaluatedSpeciesArchive: EvaluatedSpeciesArchive[T,I,F]): SpeciesArchive[T, I, F] = {
+      val migratedSpecies: EvaluatedSpecies[T, I, F] = migrate(evaluatedSpeciesArchive.populations)
+      val archiveVectorOption = evaluatedSpeciesArchive.archives
       val speciesArchive: SpeciesArchive[T,I,F] = SpeciesArchive((for (j <- 0 to migratedSpecies.size - 1) yield {
         val evaluatedPopulationn: EvaluatedPopulation[T,I,F]  = migratedSpecies(j)
         val archive: Option[EvaluatedPopulation[T,I,F]] = archiveVectorOption.map {av => av(j)}
         evolvePopulation(evaluatedPopulationn, archive)
       }).toVector)
       speciesArchive
-    }).toVector
-    (nextGeneration, evaluatedSpeciesVector)
   }
-
 
 }

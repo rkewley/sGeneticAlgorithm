@@ -9,7 +9,7 @@ class ArchiveUpdaterSpec extends FlatSpec {
   val random = new SimRandom(0)
   //Create a population with uniform genomes
   val pop: Population[Long, Vector[Long]] = (for (i <- 1 to 100) yield {
-    (for (j <- 1 to 100) yield i.toLong).toVector
+    (for (j <- 2 to 101) yield i.toLong).toVector
   }).toVector
 
   // Evaluate the population so that fitness is the average of the values
@@ -26,7 +26,7 @@ class ArchiveUpdaterSpec extends FlatSpec {
   val evaluatedPopulation = evaluatedSpecies(0)(0)
 
   "An ArchiveUpdater" should "add the best elements to the population" in {
-    val archive1: Population[Long, Vector[Long]] = (for (i <- 101 to 110) yield {
+    val archive1: Population[Long, Vector[Long]] = (for (i <- 100 to 109) yield {
       (for (j <- 1 to 100) yield i.toLong).toVector
     }).toVector
 
@@ -45,9 +45,11 @@ class ArchiveUpdaterSpec extends FlatSpec {
     val newArchive = archiveUpdater.updateArchive(archive, evaluated)
 
     // New population should have elements from 91-110
-    val newValues = newArchive.map(ev => ev.genome(0).asInstanceOf[Long]).sorted
+    val newValues = newArchive.map(ev => ev.genome(0)).sorted
 
-    val test = (for (i <- 91 to 110) yield i.toLong).toVector.sorted
+    val test = (for (i <- 90 to 109) yield i.toLong).toVector.sorted
+
+    println("new archive " + newValues)
 
     assert(newValues == test)
 

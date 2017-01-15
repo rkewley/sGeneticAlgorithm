@@ -17,7 +17,7 @@ class CrossoverEvolver[T, I <: Iterable[T], F: Ordering](val mutator: Mutator[T,
   def selectSurvivors(evaluated: EvaluatedPopulation[T, I, F], archiveOption: Option[EvaluatedPopulation[T, I, F]], n: Int) = survivorSelector.selectMultiFrom(evaluated, archiveOption, n)
 
   @tailrec
-  private def addChildren(population: Population[T, I], evaluatedPopulation: EvaluatedPopulation[T, I, F], totalChildren: Int, archiveOption: Option[EvaluatedPopulation[T, I, F]] = None): Population[T, I] = {
+  final def addChildren(population: Population[T, I], evaluatedPopulation: EvaluatedPopulation[T, I, F], totalChildren: Int, archiveOption: Option[EvaluatedPopulation[T, I, F]] = None): Population[T, I] = {
     val populationSize = evaluatedPopulation.size
     population.size match {
       case x if x >= totalChildren => population.take(totalChildren)
@@ -40,7 +40,7 @@ class CrossoverEvolver[T, I <: Iterable[T], F: Ordering](val mutator: Mutator[T,
     // Add survivors
     val numSurvivors = populationSize - numNewChildren
     val survivors = selectSurvivors(evaluatedPopulation, archiveOption, numSurvivors).map(_.genome)
-    val upddatedArchive = archiveOption.map(ar => archiveUpdater.updateArchive(evaluatedPopulation, ar))
+    val upddatedArchive = archiveOption.map(ar => archiveUpdater.updateArchive(ar, evaluatedPopulation))
     new PopArchive(newChildren ++ survivors, upddatedArchive)
   }
 
